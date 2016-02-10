@@ -347,6 +347,15 @@ IXGBE_PARAM(dmac_watchdog,
 IXGBE_PARAM(vxlan_rx,
 	    "VXLAN receive checksum offload (0,1), default 1 = Enable");
 
+/* Enable/disable support for QinQ
+ *
+ * Valid Values: 0(Disable), 1(Enable)
+ *
+ * Default Value: 0
+ */
+IXGBE_PARAM(qinq,
+	    "QinQ support (0,1), default 0 = Disable");
+
 struct ixgbe_option {
 	enum { enable_option, range_option, list_option } type;
 	const char *name;
@@ -1224,6 +1233,42 @@ void __devinit ixgbe_check_options(struct ixgbe_adapter *adapter)
 
 			ixgbe_validate_option(&enable_vxlan_rx, &opt);
 			if (enable_vxlan_rx)
+				adapter->flags |= flag;
+			else
+				adapter->flags &= ~flag;
+#ifdef module_param_array
+		} else if (opt.def) {
+			adapter->flags |= flag;
+		} else {
+			adapter->flags &= ~flag;
+		}
+#endif
+	}
+
+	{ /* QinQ support */
+		struct ixgbe_option opt = {
+			.type = range_option,
+			.name = "qinq",
+			.err  = "defaulting to 0 (disabled)",
+			.def  = 0,
+			.arg  = { .r = { .min = 0, .max = 1 } },
+		};
+		const char *cmsg = "QinQ not supported on this hardware";
+		const u32 flag = IXGBE_FLAG_QINQ_ENABLE;
+
+		if (!(adapter->flags & IXGBE_FLAG_QINQ_CAPABLE)) {
+			opt.err = cmsg;
+			opt.msg = cmsg;
+			opt.def = 0;
+			opt.arg.r.max = 0;
+		}
+#ifdef module_param_array
+		if (num_qinq > bd) {
+#endif
+			unsigned int enable_qinq = qinq[bd];
+
+			ixgbe_validate_option(&enable_qinq, &opt);
+			if (enable_qinq)
 				adapter->flags |= flag;
 			else
 				adapter->flags &= ~flag;
