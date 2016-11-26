@@ -1371,6 +1371,7 @@ struct ixgbe_dmac_config {
 #define IXGBE_CTRL_EXT_NS_DIS	0x00010000 /* No Snoop disable */
 #define IXGBE_CTRL_EXT_RO_DIS	0x00020000 /* Relaxed Ordering disable */
 #define IXGBE_CTRL_EXT_DRV_LOAD	0x10000000 /* Driver loaded bit for FW */
+#define IXGBE_CTRL_EXT_EXT_VLAN	0x04000000 /* Extended VLAN bit */
 
 /* Direct Cache Access (DCA) definitions */
 #define IXGBE_DCA_CTRL_DCA_ENABLE	0x00000000 /* DCA Enable */

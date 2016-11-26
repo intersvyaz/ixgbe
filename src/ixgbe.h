@@ -755,6 +755,8 @@ struct ixgbe_adapter {
 #define IXGBE_FLAG2_VXLAN_REREG_NEEDED		(u32)(1 << 16)
 #define IXGBE_FLAG2_PHY_INTERRUPT		(u32)(1 << 17)
 #define IXGBE_FLAG2_VLAN_PROMISC		(u32)(1 << 18)
+#define IXGBE_FLAG2_QINQ_CAPABLE		(u32)(1 << 19)
+#define IXGBE_FLAG2_QINQ_ENABLE			(u32)(1 << 20)
 
 	bool cloud_mode;
 

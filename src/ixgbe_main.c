@@ -2938,6 +2938,16 @@ static void ixgbe_configure_tx(struct ixgbe_adapter *adapter)
 		IXGBE_WRITE_REG(hw, IXGBE_DMATXCTL, dmatxctl);
 	}
 
+	/* QinQ support (Enable Global Double VLAN) */
+	if (adapter->flags2 & IXGBE_FLAG2_QINQ_CAPABLE) {
+		dmatxctl = IXGBE_READ_REG(hw, IXGBE_DMATXCTL);
+		if (adapter->flags2 & IXGBE_FLAG2_QINQ_ENABLE)
+			dmatxctl |= IXGBE_DMATXCTL_GDV;
+		else
+			dmatxctl &= ~IXGBE_DMATXCTL_GDV;
+		IXGBE_WRITE_REG(hw, IXGBE_DMATXCTL, dmatxctl);
+	}
+
 	/* Setup the HW Tx Head and Tail descriptor pointers */
 	for (i = 0; i < adapter->num_tx_queues; i++)
 		ixgbe_configure_tx_ring(adapter, adapter->tx_ring[i]);
@@ -5403,6 +5413,15 @@ static void ixgbe_up_complete(struct ixgbe_adapter *adapter)
 	/* Set PF Reset Done bit so PF/VF Mail Ops can work */
 	ctrl_ext = IXGBE_READ_REG(hw, IXGBE_CTRL_EXT);
 	ctrl_ext |= IXGBE_CTRL_EXT_PFRSTD;
+
+	/* QinQ support (Set Extended VLAN bit) */
+	if (adapter->flags2 & IXGBE_FLAG2_QINQ_CAPABLE) {
+		if (adapter->flags2 & IXGBE_FLAG2_QINQ_ENABLE)
+			ctrl_ext |= IXGBE_CTRL_EXT_EXT_VLAN;
+		else
+			ctrl_ext &= ~IXGBE_CTRL_EXT_EXT_VLAN;
+	}
+
 	IXGBE_WRITE_REG(hw, IXGBE_CTRL_EXT, ctrl_ext);
 }
 
@@ -5848,6 +5867,7 @@ static int __devinit ixgbe_sw_init(struct ixgbe_adapter *adapter)
 		break;
 	case ixgbe_mac_82599EB:
 		adapter->flags |= IXGBE_FLAGS_82599_INIT;
+		adapter->flags2 |= IXGBE_FLAG2_QINQ_CAPABLE;
 		if (hw->device_id == IXGBE_DEV_ID_82599_T3_LOM)
 			adapter->flags2 |= IXGBE_FLAG2_TEMP_SENSOR_CAPABLE;
 #ifndef IXGBE_NO_SMART_SPEED
