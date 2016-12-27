@@ -28,9 +28,9 @@ ifneq ($(KERNELRELEASE),)
 # Makefile for the Intel(R) 10GbE PCI Express Linux Network Driver
 #
 
-obj-$(CONFIG_IXGBE) += ixgbe.o
+obj-$(CONFIG_IXGBE) += ixgbe$(NETMAP_DRIVER_SUFFIX).o
 
-define ixgbe-y
+define ixgbe$(NETMAP_DRIVER_SUFFIX)-y
 	ixgbe_main.o
 	ixgbe_api.o
 	ixgbe_common.o
@@ -49,24 +49,24 @@ define ixgbe-y
 	ixgbe_x540.o
 	ixgbe_x550.o
 endef
-ixgbe-y := $(strip ${ixgbe-y})
+ixgbe$(NETMAP_DRIVER_SUFFIX)-y := $(strip ${ixgbe$(NETMAP_DRIVER_SUFFIX)-y})
 
-ixgbe-${CONFIG_DCB} += ixgbe_dcb_nl.o
+ixgbe$(NETMAP_DRIVER_SUFFIX)-${CONFIG_DCB} += ixgbe_dcb_nl.o
 
-ixgbe-${CONFIG_DEBUG_FS} += ixgbe_debugfs.o
+ixgbe$(NETMAP_DRIVER_SUFFIX)-${CONFIG_DEBUG_FS} += ixgbe_debugfs.o
 
-ixgbe-${CONFIG_FCOE:m=y} += ixgbe_fcoe.o
+ixgbe$(NETMAP_DRIVER_SUFFIX)-${CONFIG_FCOE:m=y} += ixgbe_fcoe.o
 
-ixgbe-$(CONFIG_PTP_1588_CLOCK:m=y) += ixgbe_ptp.o
+ixgbe$(NETMAP_DRIVER_SUFFIX)-$(CONFIG_PTP_1588_CLOCK:m=y) += ixgbe_ptp.o
 
-ixgbe-${CONFIG_SYSFS} += ixgbe_sysfs.o
+ixgbe$(NETMAP_DRIVER_SUFFIX)-${CONFIG_SYSFS} += ixgbe_sysfs.o
 
-ixgbe-y += kcompat.o
+ixgbe$(NETMAP_DRIVER_SUFFIX)-y += kcompat.o
 
 else	# ifneq($(KERNELRELEASE),)
 # normal makefile
 
-DRIVER := ixgbe
+DRIVER := ixgbe$(NETMAP_DRIVER_SUFFIX)
 
 ifeq (,$(wildcard common.mk))
   $(error Cannot find common.mk build rules)
@@ -127,8 +127,11 @@ ccc: clean
 	@+$(call devkernelbuild,modules,coccicheck MODE=report))
 
 # Build manfiles
-manfile:
+manfile: ../$(DRIVER).$(MANSECTION)
 	@gzip -c ../${DRIVER}.${MANSECTION} > ${DRIVER}.${MANSECTION}.gz
+
+../$(DRIVER).$(MANSECTION):
+	touch $@
 
 # Clean the module subdirectories
 clean:

@@ -25,6 +25,8 @@
 #ifndef _KCOMPAT_H_
 #define _KCOMPAT_H_
 
+#include <netmap_linux_config.h>
+
 #ifndef LINUX_VERSION_CODE
 #include <linux/version.h>
 #else
@@ -5241,7 +5243,7 @@ static inline void csum_replace_by_diff(__sum16 *sum, __wsum diff)
 #if !(RHEL_RELEASE_CODE && (RHEL_RELEASE_CODE > RHEL_RELEASE_VERSION(7,2)))
 static inline void page_ref_inc(struct page *page)
 {
-	atomic_inc(&page->_count);
+	atomic_inc(&page->NETMAP_LINUX_PAGE_COUNT);
 }
 
 #endif
