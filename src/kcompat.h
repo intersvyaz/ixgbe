@@ -2830,6 +2830,8 @@ extern void _kc_pci_clear_master(struct pci_dev *dev);
 #endif /* < 2.6.29 */
 
 /*****************************************************************************/
+#undef CONFIG_FCOE
+#undef CONFIG_FCOE_MODULE
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) )
 #define NO_PTP_SUPPORT
 #define skb_rx_queue_recorded(a) false

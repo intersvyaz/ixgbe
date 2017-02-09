@@ -3592,7 +3592,7 @@ static void ixgbe_configure_virtualization(struct ixgbe_adapter *adapter)
 		vmdctl = IXGBE_READ_REG(hw, IXGBE_VT_CTL);
 		vmdctl |= IXGBE_VT_CTL_VT_ENABLE;
 		vmdctl &= ~IXGBE_VT_CTL_POOL_MASK;
-		vmdctl |= VMDQ_P(0) << IXGBE_VT_CTL_POOL_SHIFT;
+		vmdctl |= 0 << IXGBE_VT_CTL_POOL_SHIFT;
 		if (adapter->num_vfs)
 			vmdctl |= IXGBE_VT_CTL_REPLEN;
 		IXGBE_WRITE_REG(hw, IXGBE_VT_CTL, vmdctl);
@@ -4631,9 +4631,11 @@ void ixgbe_set_rx_mode(struct net_device *netdev)
 		 * if SR-IOV and VMDQ are disabled - otherwise ensure
 		 * that hardware VLAN filters remain enabled.
 		 */
+#ifdef JNPR
 		if ((adapter->flags & (IXGBE_FLAG_VMDQ_ENABLED |
 				       IXGBE_FLAG_SRIOV_ENABLED)))
 			vlnctrl |= (IXGBE_VLNCTRL_VFE | IXGBE_VLNCTRL_CFIEN);
+#endif
 #endif
 #ifdef NETIF_F_HW_VLAN_CTAG_FILTER
 		features &= ~NETIF_F_HW_VLAN_CTAG_FILTER;
