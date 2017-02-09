@@ -2619,6 +2619,8 @@ extern void _kc_pci_clear_master(struct pci_dev *dev);
 #endif /* < 2.6.29 */
 
 /*****************************************************************************/
+#undef CONFIG_FCOE
+#undef CONFIG_FCOE_MODULE
 #if ( LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30) )
 #define skb_rx_queue_recorded(a) false
 #define skb_get_rx_queue(a) 0

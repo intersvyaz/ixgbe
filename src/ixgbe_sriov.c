@@ -398,6 +398,25 @@ void ixgbe_set_vmolr(struct ixgbe_hw *hw, u32 vf, bool aupe)
 	IXGBE_WRITE_REG(hw, IXGBE_VMOLR(vf), vmolr);
 }
 
+void ixgbe_set_vmolr_mpe(struct ixgbe_hw *hw, u32 vf, bool mpe)
+{
+	u32 vmolr = IXGBE_READ_REG(hw, IXGBE_VMOLR(vf));
+	vmolr |=  IXGBE_VMOLR_BAM;
+
+	printk("VF %d setting Multicast Promiscuos Enable %s \n", vf, mpe?"TRUE":"FALSE");
+	printk("Register before write : 0x%x\n",vmolr);
+
+	if (mpe)
+		vmolr |= IXGBE_VMOLR_MPE;
+	else
+		vmolr &= ~IXGBE_VMOLR_MPE;
+
+	IXGBE_WRITE_REG(hw, IXGBE_VMOLR(vf), vmolr);
+
+	vmolr = IXGBE_READ_REG(hw, IXGBE_VMOLR(vf));
+	printk("Register after write : 0x%x\n",vmolr);
+}
+
 static void ixgbe_set_vmvir(struct ixgbe_adapter *adapter,
 			    u16 vid, u16 qos, u32 vf)
 {
@@ -425,6 +444,7 @@ static inline void ixgbe_vf_reset_event(struct ixgbe_adapter *adapter, u32 vf)
 
 	/* reset offloads to defaults */
 	ixgbe_set_vmolr(hw, vf, !vfinfo->pf_vlan);
+	ixgbe_set_vmolr_mpe(hw, vf, FALSE);
 
 	/* set outgoing tags for VFs */
 	if (!vfinfo->pf_vlan && !vfinfo->pf_qos && !num_tcs) {
@@ -456,7 +476,12 @@ static inline void ixgbe_vf_reset_event(struct ixgbe_adapter *adapter, u32 vf)
 int ixgbe_set_vf_mac(struct ixgbe_adapter *adapter,
 		     int vf, unsigned char *mac_addr)
 {
+	struct ixgbe_hw *hw = &adapter->hw;
 	s32 retval = 0;
+
+	/* JNPR - Add Multicast promiscuous as well */
+	ixgbe_set_vmolr_mpe(hw, vf, TRUE);
+
 	ixgbe_del_mac_filter(adapter, adapter->vfinfo[vf].vf_mac_addresses, vf);
 	retval = ixgbe_add_mac_filter(adapter, mac_addr, vf);
 	if (retval >= 0)
@@ -993,8 +1018,15 @@ int ixgbe_ndo_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
 	dev_info(pci_dev_to_dev(adapter->pdev), "Reload the VF driver to make this change effective.\n");
 	retval = ixgbe_set_vf_mac(adapter, vf, mac);
 	if (retval >= 0) {
-		/* pf_set_mac is used in ESX5.1 and base driver but not in ESX5.5 */
-		adapter->vfinfo[vf].pf_set_mac = true;
+#ifdef USE_PF_SET_MAC
+                /* pf_set_mac is used in ESX5.1 and base driver but not in ESX5.5 */
+                adapter->vfinfo[vf].pf_set_mac = true;
+#else
+                adapter->vfinfo[vf].pf_set_mac = false;
+#endif
+                e_warn(drv, "VF %d mac %x:%x:%x:%x:%x:%x pf_set_mac %s\n", vf,
+                       mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
+                       adapter->vfinfo[vf].pf_set_mac?"Yes":"No");
 		if (test_bit(__IXGBE_DOWN, &adapter->state)) {
 			dev_warn(pci_dev_to_dev(adapter->pdev), "The VF MAC address has been set, but the PF device is not up.\n");
 			dev_warn(pci_dev_to_dev(adapter->pdev), "Bring the PF device up before attempting to use the VF device.\n");
